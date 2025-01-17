@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | User</title>
+    <link href="{% static 'assets/css/bootstrap.css' %}" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'assets/css/styles.css' %}" />
+  </head>
+  <body>
+    <section class="vh-100">
+      <div class="container-fluid h-custom">
+        <div class="row d-flex justify-content-center align-items-center h-100">
+          <div class="col-md-9 col-lg-6 col-xl-5">
+            <img
+              src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.webp"
+              class="img-fluid"
+              alt="Sample image"
+            />
+          </div>
+          <div class="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
+            <form id="loginForm" method="POST">
+              {% csrf_token %}
+              <h2 class="ml-4">Login</h2>
+
+              <div class="divider d-flex align-items-center"></div>
+
+              <!-- Email input -->
+              <!-- Email input -->
+              <div data-mdb-input-init class="form-outline mb-2 mt-4">
+                <input
+                  type="email"
+                  name="email"
+                  id="email"
+                  class="form-control"
+                  placeholder="Enter a valid email address"
+                />
+                <label class="form-label small" for="email"
+                  >Email address</label
+                >
+              </div>
+
+              <!-- Password input -->
+              <div data-mdb-input-init class="form-outline mb-2">
+                <input
+                  type="password"
+                  name="password"
+                  id="password"
+                  class="form-control"
+                  placeholder="Enter password"
+                />
+                <label class="form-label small" for="password">Password</label>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center">
+                <!-- Checkbox -->
+                <div class="form-check mb-0">
+                  <input
+                    class="form-check-input me-2"
+                    type="checkbox"
+                    value=""
+                  />
+                  <label class="form-check-label" for="form2Example3">
+                    Remember me
+                  </label>
+                </div>
+                <a href="" class="">Forgot password?</a>
+              </div>
+
+              <div class="text-center text-lg-start mt-4 pt-2">
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  style="padding-left: 30px; padding-right: 30px"
+                >
+                  Login
+                </button>
+                <p class="small fw-bold mt-2 pt-1 mb-0">
+                  Don't have an account?
+                  <a href="{% url 'register' %}" class="link-danger"
+                    >Register</a
+                  >
+                </p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Include jQuery via CDN -->
+    <script
+      src="https://code.jquery.com/jquery-3.6.4.min.js"
+      crossorigin="anonymous"
+    ></script>
+<!-- Include the js-cookie library via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+
+    <script>
+     // Handle form submission via AJAX
+$('#loginForm').on('submit', async function (e) {
+    e.preventDefault();  // Prevent normal form submission
+
+    // Clear any previous error messages
+    $('label[for="email"]').removeClass('text-danger').text('Email address');
+    $('label[for="password"]').removeClass('text-danger').text('Password');
+
+    const formData = new FormData(this);
+
+    try {
+        const response = await fetch("{% url 'login' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+
+            // Check if there's an error for a specific field
+            if (data.field && data.error) {
+                // Append error message to the label
+                $(`label[for="${data.field}"]`).addClass('text-danger').text(data.error);
+            }
+        } else {
+    const data = await response.json();
+
+    // Set the JWT token in the cookie
+   let now = new Date();
+now.setHours(now.getHours() + 1);  // Set expiration to 1 hour from now
+Cookies.set("jwt_token", data.jwt_token, { 
+    expires: now,   // Token will expire 1 hour from now
+    path: '/',      // Available across the whole site
+});
+    alert(data.message);  // Alert user with the response message
+
+    // Redirect to the homepage or dashboard
+    window.location.href = "{% url '' %}";
+}
+
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+// Remove error message when the user clicks on the input field
+$('#email, #password').on('focus', function () {
+    const fieldId = $(this).attr('id'); // Get the field ID
+    $(`label[for="${fieldId}"]`).removeClass('text-danger').text(fieldId === 'email' ? 'Email address' : 'Password');
+});
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | User</title>
+    <link href="{% static 'assets/css/bootstrap.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'assets/css/styles.css' %}">
+</head>
+<body>
+    <section class="vh-100">
+  <div class="container-fluid h-custom">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col-md-9 col-lg-6 col-xl-5">
+        <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.webp"
+          class="img-fluid" alt="Sample image">
+      </div>
+      <div class="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
+        <form action="{% url 'register' %}" method="POST" id="registerForm">
+  {% csrf_token %}
+  <h2 class="ml-4 pt-3">Register</h2>
+  <!-- First Name -->
+  <div class="form-outline mb-2 mt-4">
+    <input type="text" id="first_name" name="first_name" class="form-control" placeholder="Enter your first name" />
+    <label id="first_name_label" class="form-label small" data-original="First Name">First Name</label>
+  </div>
+
+  <!-- Last Name -->
+  <div class="form-outline mb-2">
+    <input type="text" id="last_name" name="last_name" class="form-control" placeholder="Enter your last name" />
+    <label id="last_name_label" class="form-label small" data-original="Last Name">Last Name</label>
+  </div>
+
+  <!-- Email -->
+  <div class="form-outline mb-2">
+    <input type="email" id="email" name="email" class="form-control" placeholder="Enter a valid email address" />
+    <label id="email_label" class="form-label small" data-original="Email Address">Email Address</label>
+  </div>
+
+  <!-- Password -->
+  <div class="form-outline">
+    <input type="password" id="password1" name="password1" class="form-control" placeholder="Enter password" />
+    <label id="password1_label" class="form-label small" data-original="Password">Password</label>
+  </div>
+
+  <!-- Confirm Password -->
+  <div class="form-outline">
+    <input type="password" id="password2" name="password2" class="form-control" placeholder="Repeat password" />
+    <label id="password2_label" class="form-label small" data-original="Repeat Password">Repeat Password</label>
+  </div>
+
+  <div class="text-center text-lg-start mt-2">
+    <button type="submit" id="registerButton" class="btn btn-primary" style="padding-left: 30px; padding-right: 30px;">Register</button>
+    <p class="small fw-bold mt-2 pt-1 mb-0">
+                    Already have an account?
+                    <a href="{% url 'login' %}" class="link-danger"
+                      >Login</a
+                    >
+                  </p>
+  </div>
+</form>
+
+      </div>
+    </div>
+  </div>
+ 
+</section>
+
+
+<!-- Include jQuery via CDN -->
+<script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha384-oS4H+6sXB36jSczpFzFaaIX8MG+Q4Xc3eS0iF1l+RNE2aE1sQsijh3G+KRpiFFMg" crossorigin="anonymous"></script>
+
+<script>
+   document.getElementById('registerForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    // Reset all labels to their original content before submission
+    document.querySelectorAll('.form-label').forEach(label => {
+        label.classList.remove('text-danger'); // Remove the red color for errors
+        label.textContent = label.getAttribute('data-original') || label.textContent;
+    });
+
+    const formData = new FormData(this);
+
+    try {
+        const response = await fetch("{% url 'register' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+
+            if (data.field && data.error) {
+                // Replace label content with the error message
+                const label = document.getElementById(`${data.field}_label`);
+                if (label) {
+                    label.textContent = data.error;
+                    label.classList.add('text-danger'); // Add red text styling for error
+                }
+            }
+        } else {
+            const data = await response.json();
+            alert(data.message);
+            window.location.href = "{% url 'login' %}"; // Redirect after successful registration
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+
+// Add this extra function to clear errors when the user fixes the input.
+document.querySelectorAll('input').forEach(input => {
+    input.addEventListener('input', function() {
+        const label = document.getElementById(`${this.name}_label`);
+        if (label) {
+            // Reset label text and style if the user starts fixing the input field
+            label.textContent = label.getAttribute('data-original') || label.textContent;
+            label.classList.remove('text-danger'); // Remove error class
+        }
+    });
+});
+
+
+</script>
+</body>
+</html>
