@@ -94,63 +94,67 @@
       src="https://code.jquery.com/jquery-3.6.4.min.js"
       crossorigin="anonymous"
     ></script>
-<!-- Include the js-cookie library via CDN -->
-<script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+    <!-- Include the js-cookie library via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
 
     <script>
-     // Handle form submission via AJAX
-$('#loginForm').on('submit', async function (e) {
-    e.preventDefault();  // Prevent normal form submission
+      // Handle form submission via AJAX
+      $("#loginForm").on("submit", async function (e) {
+        e.preventDefault(); // Prevent normal form submission
 
-    // Clear any previous error messages
-    $('label[for="email"]').removeClass('text-danger').text('Email address');
-    $('label[for="password"]').removeClass('text-danger').text('Password');
+        // Clear any previous error messages
+        $('label[for="email"]')
+          .removeClass("text-danger")
+          .text("Email address");
+        $('label[for="password"]').removeClass("text-danger").text("Password");
 
-    const formData = new FormData(this);
+        const formData = new FormData(this);
 
-    try {
-        const response = await fetch("{% url 'login' %}", {
-            method: 'POST',
+        try {
+          const response = await fetch("{% url 'login' %}", {
+            method: "POST",
             headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
+              "X-CSRFToken": "{{ csrf_token }}",
             },
             body: formData,
-        });
+          });
 
-        if (!response.ok) {
+          if (!response.ok) {
             const data = await response.json();
 
             // Check if there's an error for a specific field
             if (data.field && data.error) {
-                // Append error message to the label
-                $(`label[for="${data.field}"]`).addClass('text-danger').text(data.error);
+              // Append error message to the label
+              $(`label[for="${data.field}"]`)
+                .addClass("text-danger")
+                .text(data.error);
             }
-        } else {
-    const data = await response.json();
+          } else {
+            const data = await response.json();
 
-    // Set the JWT token in the cookie
-   let now = new Date();
-now.setHours(now.getHours() + 1);  // Set expiration to 1 hour from now
-Cookies.set("jwt_token", data.jwt_token, { 
-    expires: now,   // Token will expire 1 hour from now
-    path: '/',      // Available across the whole site
-});
-    alert(data.message);  // Alert user with the response message
+            // Set the JWT token in the cookie
+            let now = new Date();
+            now.setHours(now.getHours() + 1); // Set expiration to 1 hour from now
+            Cookies.set("jwt_token", data.jwt_token, {
+              expires: now, // Token will expire 1 hour from now
+              path: "/", // Available across the whole site
+            });
+            alert(data.message); // Alert user with the response message
 
-    // Redirect to the homepage or dashboard
-    window.location.href = "{% url '' %}";
-}
-
-    } catch (error) {
-        console.error('Error:', error);
-    }
-});
-// Remove error message when the user clicks on the input field
-$('#email, #password').on('focus', function () {
-    const fieldId = $(this).attr('id'); // Get the field ID
-    $(`label[for="${fieldId}"]`).removeClass('text-danger').text(fieldId === 'email' ? 'Email address' : 'Password');
-});
-
+            // Redirect to the homepage or dashboard
+            window.location.href = "{% url '' %}";
+          }
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      });
+      // Remove error message when the user clicks on the input field
+      $("#email, #password").on("focus", function () {
+        const fieldId = $(this).attr("id"); // Get the field ID
+        $(`label[for="${fieldId}"]`)
+          .removeClass("text-danger")
+          .text(fieldId === "email" ? "Email address" : "Password");
+      });
     </script>
   </body>
 </html>

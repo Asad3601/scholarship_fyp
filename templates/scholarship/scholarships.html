@@ -44,18 +44,16 @@ Scholarships
                 </div>
                 <div class="job-tittle job-tittle2">
                     <a href="#">
-                        <h4>{{ scholarship }}</h4>
+                        <h4>{{ scholarship.title }}</h4>
                     </a>
                     <ul>
-                        <li>Creative Agency</li>
-                        <li><i class="fas fa-map-marker-alt"></i>Athens, Greece</li>
-                        <li>$3500 - $4000</li>
+                        <li>{{scholarship.description}}</li><br>
+                        <li><i class="fas fa-map-marker-alt"></i>{{scholarship.location}}</li>
                     </ul>
                 </div>
             </div>
             <div class="items-link items-link2 f-right">
-                <a href="job_details.html">Full Time</a>
-                <span>7 hours ago</span>
+                <span>{{scholarship.due_date}}</span>
             </div>
         </div>
     {% endfor %}
