@@ -21,7 +21,6 @@ urlpatterns = [
     path('',views.index,name=''),
     path('about/',views.about,name='about'),
     path('contact/',views.contact,name='contact'),
-    path('scholarships/',views.scholarships,name='scholarships'),
     path('api/auth/v1/', include('User.urls')),
     path('api/scholarship/', include('Scholarship.urls')),
 ]

@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
+from django.template.loader import render_to_string
 from django.http import JsonResponse
 import requests
 import math
@@ -9,8 +10,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from Scholarship.models import Scholarship
 import time
-
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .scraper import scraper_masters
     # url = "https://www.scholarshipsads.com" 200
     # url = "https://www.scholarshipsads.com/search/?nationality%5B%5D=279&country%5B%5D=&degree%5B%5D=&subject%5B%5D=&funding%5B%5D=" 200
     # url="https://www.daad.pk" 200
@@ -27,107 +30,65 @@ import time
 def masters_portal(request):
     try:
         if request.method == 'POST':
+            Scholarship.objects.all().delete()
             level = request.POST.get('level')
             department = '-'.join(request.POST.get('department', '').split(' '))
             country = '-'.join(request.POST.get('country', '').split(' '))
-
-            base_url = "https://www.mastersportal.com"
-            search_url = f"{base_url}/search/scholarships/{level}/{country}/{department}"
-
-            chrome_options = Options()
-            chrome_options.add_argument("--headless")  # Run in headless mode
-            chrome_options.add_argument("--disable-gpu")
-            chrome_options.add_argument("--no-sandbox")
-            chrome_options.add_argument("start-maximized")
-            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-            chrome_options.add_experimental_option('useAutomationExtension', False)
-            chrome_options.add_argument("enable-automation")
-            chrome_options.add_argument("--disable-infobars")
-            chrome_options.add_argument("--disable-dev-shm-usage")
-            chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36')
-
-            service = Service('chromedriver.exe')  # Update path to chromedriver if needed
-
-            # Initialize the WebDriver
-            driver = webdriver.Chrome(service=service, options=chrome_options)
-            driver.get(search_url)
-
-            # Wait for the search results to load
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".SearchResultItem")))
-
-            # Parse the initial page to determine the total number of pages
-            page_source = driver.page_source
-            soup = BeautifulSoup(page_source, 'html.parser')
-            page_heading = soup.find('span', class_="SearchSummaryDesktop").text
-            count = int(page_heading.split(" ")[0])
-            pages = math.ceil(count / 20)
-            driver.quit()
-
-            scholarships_data = []
-
-            for page_no in range(1, pages+1):
-                print(f"Scraping page {page_no}")
-                paginated_url = f"{search_url}?page={page_no}"
-
-                # Initialize a new WebDriver instance for each page
-                driver = webdriver.Chrome(service=service, options=chrome_options)
-                driver.get(paginated_url)
-
-                # Wait for the search results to load
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".SearchResultItem")))
-
-                # Parse the current page
-                page_source = driver.page_source
-                soup = BeautifulSoup(page_source, 'html.parser')
-                scholarships = soup.find_all("li", class_="SearchResultItem")
-
-                for scholarship in scholarships:
-                    href = scholarship.find("a", class_="ScholarshipCard").get('href')
-                    full_url = base_url + href
-                    driver = webdriver.Chrome(service=service, options=chrome_options)
-                    driver.get(full_url)
-                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "ScholarshipName")))
-
-                    scholarship_page_source = driver.page_source
-                    scholarship_soup = BeautifulSoup(scholarship_page_source, 'html.parser')
-
-                    try:
-                        title = scholarship_soup.find('h1', class_="ScholarshipName").get_text(strip=True)
-                        university = scholarship_soup.find("a", class_="Name TextLink Connector js-organisation-info-link")
-                        university_text = university.get_text(strip=True) if university else "No University Info"
-
-                        location = scholarship_soup.find("span", class_="LocationItems")
-                        location_text = location.get_text(strip=True) if location else "No Location Info"
-
-                        description = scholarship_soup.find("article", class_="ArticleContainer")
-                        description_text = description.get_text(strip=True) if description else "No Description"
-
-                        deadline = scholarship_soup.find_all("div", class_="Title")[3]
-                        deadline_text = deadline.get_text(strip=True) if deadline else "No Deadline Info"
-
-                        scholarships_data.append({
-                            'title': title,
-                            'description': description_text,
-                            'location': f"{university_text} {location_text}",
-                            'due_date': deadline_text
-                        })
-                        driver.quit()
-                    except Exception as e:
-                        print(f"Error scraping {full_url}: {e}")
-                        continue
-
-                    time.sleep(1)  # Short delay to avoid overwhelming the server
-
-                driver.quit()
-
-            return render(request, 'scholarship/scholarships.html', {'scholarships': scholarships_data, "count": len(scholarships_data)})
-
-        return render(request, 'scholarship/scholarships.html', {'scholarships': [], "count": 0})
-
+            scraper_masters(level,department,country)
+            return redirect('scholarships')
+        return redirect('scholarships')
     except Exception as e:
         print(f"Error: {str(e)}")
         return render(request, 'scholarship/scholarships.html', {'error': "An error occurred while fetching scholarships."})
 
+
+
+
+def is_ajax(request):
+    return request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
+def scholarships_data(request):
+    query = request.GET.get('q', '')
+    
+    # Filter scholarships based on the query if provided
+    all_scholarship_listings = Scholarship.objects.all()
+    if query:
+        all_scholarship_listings = all_scholarship_listings.filter(title__icontains=query)  # Example filter
+
+    paginator = Paginator(all_scholarship_listings, 15)  # 15 items per page
+    page = request.GET.get('page')
+
+    try:
+        scholarship_listings = paginator.page(page)
+    except PageNotAnInteger:
+        scholarship_listings = paginator.page(1)
+    except EmptyPage:
+        scholarship_listings = paginator.page(paginator.num_pages)
+
+    total_scholarship = Scholarship.objects.count()  # Total count of scholarships
+
+    # Determine the current page number
+    current_page = scholarship_listings.number
+
+    # Adjust the limit based on the current page number
+    if current_page <= 3:
+        limited_page_range = range(1, min(paginator.num_pages, 5) + 1)
+    else:
+        limited_page_range = range(current_page - 2, min(paginator.num_pages, current_page + 2) + 1)
+
+    context = {
+        'scholarships': scholarship_listings,
+        'total_scholarship': total_scholarship,
+        'limited_page_range': limited_page_range,
+        'query': query
+    }
+
+    # Check if the request is AJAX
+    if is_ajax(request):  # Call your custom is_ajax function here
+        html = render_to_string('scholarship/scholarship_list.html', context)
+        return JsonResponse({'html': html})
+
+    return render(request, 'scholarship/scholarships.html', context)
 
 def scholarships_ads(request):
     try:

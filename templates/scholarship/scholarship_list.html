@@ -1,17 +1,4 @@
-{% extends 'scholarship/index.html' %}
-{% load static %}
-{% block title %}
-Scholarships
-{% endblock %}
-
-{% block main %}
-<main class="container py-5">
-    <h2 class="text-center">Scholarships</h2>
-    <!-- Job List Area Start -->
-    <div class="job-listing-area pt-80 pb-120">
-        <div class="row justify-content-center" id="scholarship-listings-table">
-            <!-- Right content -->
-            <div class="col-xl-9 col-lg-9 col-md-8">
+<div class="col-xl-9 col-lg-9 col-md-8">
                 <!-- Featured_job_start -->
                 <section class="featured-job-area">
                     <div class="container">
@@ -53,7 +40,6 @@ Scholarships
                             {% endfor %}
                         </div>
                         <!-- Scholarship List End -->
-
                         {% else %}
                             <h4 class="text-center">No scholarships found or an error occurred.</h4>
                             {% if error %}
@@ -99,36 +85,3 @@ Scholarships
                 </section>
                 <!-- Featured_job_end -->
             </div>
-        </div>
-    </div>
-    <!-- Job List Area End -->
-
-</main>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-   $(document).on('click', '.pagination a', function(e) {
-        e.preventDefault(); // Prevent default link behavior
-
-        var pageUrl = $(this).attr('href'); // Get the URL from the clicked pagination link
-        loadJobListings(pageUrl); // Call the function to load job listings for the clicked page
-    });
-
-    // Function to load job listings dynamically
-    function loadJobListings(url) {
-        $.ajax({
-            url: url,
-            type: 'GET',
-            success: function(data) {
-                $('#scholarship-listings-table').html(data.html); // Update the scholarship list with new data
-              // Update pagination links
-                window.history.pushState(null, null, url); // Update the browser URL
-            },
-            error: function(xhr, status, error) {
-                console.error(xhr.responseText);
-            }
-        });
-    }
-</script>
-
-{% endblock %}
