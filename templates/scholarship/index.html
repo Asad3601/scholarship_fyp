@@ -81,7 +81,7 @@
                         <li><a href="{% url '' %}">Home</a></li>
                         <li>
                           <a href="{% url 'scholarships' %}"
-                            >Find a Scholarship</a
+                            >Scholarships</a
                           >
                         </li>
                         <li><a href="{% url 'about' %}">About</a></li>
@@ -134,7 +134,7 @@
             <div class="row justify-content-center ml-50">
     <div class="col-12">
         <!-- form -->
-        <form action="{% url 'masters_portal' %}" method="POST" class="search-box">
+        <form action="{% url 'wemake' %}" method="POST" class="search-box">
             {% csrf_token %}
             <!-- Inputs and Submit Button in a Single Row -->
             <div class="row align-items-center">
