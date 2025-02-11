@@ -7,9 +7,9 @@ import requests
 from bs4 import BeautifulSoup
 
 from Scholarship.models import Scholarship
-
+import random
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .scraper import scraper_masters,wemakescholarships
+from .scraper import scraper_masters,wemake
     # url = "https://www.scholarshipsads.com" 200
     # url = "https://www.scholarshipsads.com/search/?nationality%5B%5D=279&country%5B%5D=&degree%5B%5D=&subject%5B%5D=&funding%5B%5D=" 200
     # url="https://www.daad.pk" 200
@@ -24,6 +24,7 @@ from .scraper import scraper_masters,wemakescholarships
 
 def response(request):
     all_scholarship_listings = Scholarship.objects.all()
+    
 
     # Paginate
     paginator = Paginator(all_scholarship_listings, 15)  # 15 items per page
@@ -58,29 +59,16 @@ def response(request):
 
     return JsonResponse(response_data, safe=True)
 
-    
+def is_ajax(request):
+    return request.headers.get('x-requested-with') == 'XMLHttpRequest'    
 
-def masters_portal(request):
-    level = request.POST.get('level', '').lower()  # Convert to lowercase
-    if level.endswith('s'):  
-        level = level[:-1]  # Remove last character if it's 's'
-    
-    department = '-'.join(request.POST.get('department', '').split(' '))  
-    country = '-'.join(request.POST.get('country', '').lower().split(' '))  # Convert to lowercase
-    
-    scraper_masters(level, department, country)
-    return response(request)
-
-
-
-def wemakescholars_portal(request):
+def scholarships_portal(request):
     try:
         if request.method == 'POST':
-            Scholarship.objects.all().delete()
+            # Scholarship.objects.all().delete()
             level = request.POST.get('level')
             department = request.POST.get('department')
             country = request.POST.get('country')
-            wemakescholarships(level,department,country)
             redirect_url = reverse('scholarships') + f'?level={level}&department={department}&country={country}'
             return redirect(redirect_url)
         return redirect('scholarships')
@@ -89,9 +77,27 @@ def wemakescholars_portal(request):
         return render(request, 'scholarship/scholarships.html', {'error': "An error occurred while fetching scholarships."})
 
 
+def masters_portal(request):
+    print("Request is comming");
+    level = request.POST.get('level', '').lower()  # Convert to lowercase
+    if level.endswith('s'):  
+        level = level[:-1]  # Remove last character if it's 's'
+    
+    department = '-'.join(request.POST.get('department', '').split(' '))  
+    country = '-'.join(request.POST.get('country', '').lower().split(' '))  # Convert to lowercase
+    scraper_masters(level, department, country)
+    return response(request)
 
-def is_ajax(request):
-    return request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
+def wemakescholars_portal(request):
+    print("Request is comming");
+    level = request.POST.get('level')
+    department = request.POST.get('department')
+    country = request.POST.get('country')
+    wemake(level,department,country)
+    return response(request)
+
+    
 
 def scholarships_data(request):
     level = request.GET.get('level', '')
@@ -100,7 +106,9 @@ def scholarships_data(request):
     print(level, department, country)
 
     # Fetch all scholarships (No Filtering)
-    all_scholarship_listings = Scholarship.objects.all()
+    all_scholarship_listings = list(Scholarship.objects.all())
+    random.shuffle(all_scholarship_listings)
+
 
     # Paginate
     paginator = Paginator(all_scholarship_listings, 15)  # 15 items per page

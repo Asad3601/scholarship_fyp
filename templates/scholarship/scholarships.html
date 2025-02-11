@@ -162,7 +162,8 @@ Scholarships {% endblock %} {% block main %}
     function makeRequests() {
         console.log("Making AJAX requests...");
         var platforms = [
-            { platform: "Master Portal", route: "{% url 'masters_portal' %}" }
+            { platform: "Master Portal", route: "{% url 'masters_portal' %}" },
+            { platform: "WeMake", route: "{% url 'wemake' %}" }
         ];
 
         var requests = platforms.map(function(platform) {
@@ -223,7 +224,7 @@ function scrap(route, platform) {
                 });
 
                 // Update total scholarships count
-                $('#total-job').text('Total Scholarships: ' + response.total_scholarship);
+                $('#total-job').text(response.total_scholarship);
 
                 // Set total pages count
                 $('#total-pagination').text('Total Pages: ' + response.total_pages);

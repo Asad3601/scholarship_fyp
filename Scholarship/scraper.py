@@ -1,8 +1,8 @@
 import requests
 import math,time
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
+from selenium import webdriver # type: ignore
+from selenium.webdriver.chrome.service import Service # type: ignore
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -95,139 +95,169 @@ def chrome_options_args():
     return driver
 
 
-def wemakescholarships(level, department, country):
+def add_scholarship_to_db(title, description, location, due_date, link):
+    """
+    Check if the scholarship already exists in the database.
+    If it does not exist, add it.
+    """
+    if not Scholarship.objects.filter(title=title, link=link).exists():
+        Scholarship.objects.create(
+            title=title,
+            description=description,
+            location=location,
+            due_date=due_date,
+            link=link
+        )
+        print(f"Added scholarship: {title}")
+    else:
+        print(f"Skipped duplicate scholarship: {title}")
+
+
+# def wemakescholarships(level, department, country):
+#     print("country",country)
+#     base_url = "https://www.wemakescholars.com"
+#     url = "https://www.wemakescholars.com/scholarship?nationality=83"
+#     driver = chrome_options_args()
+#     driver.get(url)
+#     wait = WebDriverWait(driver, 10)
+#     time.sleep(5)  # Allow page to load
+
+#     # Select "Level of Study"
+#     wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id='adv-filter-list']/ul/li[2]/span/span[1]"))).click()
+#     time.sleep(2)
+#     wait.until(EC.element_to_be_clickable((By.XPATH, f"//li[contains(text(), '{level}')]"))).click()
+
+#     # Select "Country"
+#     wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id='adv-filter-list']/ul/li[3]/div[2]/span/span[1]/span/ul/li/input"))).click()
+#     time.sleep(2)
+#     wait.until(EC.element_to_be_clickable((By.XPATH, f"//li[contains(text(), '{country}')]"))).click()
+#     time.sleep(3)
+
+#     soup = BeautifulSoup(driver.page_source, 'html.parser')
+#     valid_scholarships = [
+#         base_url + s.find("h2").find('a')['href']
+#         for s in soup.find_all("div", class_="post")
+#         if not (s.find('div', class_='form-group pull-right') and 'Expired' in s.text)
+#     ]
+
+#     print(f"Found {len(valid_scholarships)} active scholarships.")
+
+#     for index, scholarship_url in enumerate(valid_scholarships):
+#         print(f"Scraping {index + 1}/{len(valid_scholarships)}: {scholarship_url}")
+#         driver.get(scholarship_url)
+#         time.sleep(5)
+
+#         soup = BeautifulSoup(driver.page_source, 'html.parser')
+#         title = soup.find("h1", class_='clrwms fw4 font18').text.strip() if soup.find("h1") else "No Title Found"
+#         details = soup.find_all('span', class_='text-line-value')
+#         deadline = details[2].text.strip() if len(details) > 2 else "N/A"
+#         provider = details[3].text.strip() if len(details) > 3 else "N/A"
+#         article = soup.find('article', class_='more-about-scholarship')
+#         description = article.find('p').text.strip() if article else "No Description"
+
+#         add_scholarship_to_db(title, description, provider, deadline, scholarship_url)
+#         driver.back()
+#         time.sleep(3)
+
+#     driver.quit()
+
+def wemake(level,department,country):
     base_url = "https://www.wemakescholars.com"
     url = "https://www.wemakescholars.com/scholarship?nationality=83"
     driver = chrome_options_args()
     driver.get(url)
+    
     wait = WebDriverWait(driver, 10)
+    # time.sleep(5)  # Allow page to load
 
-    time.sleep(5)  # Allow page to load
+    # Click the dropdown for "Level of Study"
+    dropdown1 = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id='adv-filter-list']/ul/li[2]/span/span[1]")))
+    dropdown1.click()
+    time.sleep(2)  # Allow dropdown options to load
 
-    # Select "Level of Study"
-    wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id='adv-filter-list']/ul/li[2]/span/span[1]"))).click()
-    time.sleep(2)
-    wait.until(EC.element_to_be_clickable((By.XPATH, f"//li[contains(text(), '{level}')]"))).click()
+    level = wait.until(EC.element_to_be_clickable((By.XPATH, f"//li[contains(text(), '{level}')]")))
+    level.click()
 
-    # Select "Country"
-    wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id='adv-filter-list']/ul/li[3]/div[2]/span/span[1]/span/ul/li/input"))).click()
-    time.sleep(2)
-    wait.until(EC.element_to_be_clickable((By.XPATH, f"//li[contains(text(), '{country}')]"))).click()
+    # Click the dropdown for "Country"
+    dropdown2 = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id='adv-filter-list']/ul/li[3]/div[2]/span/span[1]/span/ul/li/input")))
+    dropdown2.click()
+    time.sleep(2)  # Allow dropdown options to load
+
+    country = wait.until(EC.element_to_be_clickable((By.XPATH, f"//li[contains(text(), '{country}')]")))
+    country.click()
     time.sleep(3)  # Wait for page update
 
     # Get list of scholarships
     soup = BeautifulSoup(driver.page_source, 'html.parser')
-    valid_scholarships = [
-        base_url + s.find("h2").find('a')['href']
-        for s in soup.find_all("div", class_="post")
-        if not (s.find('div', class_='form-group pull-right') and 'Expired' in s.text)
-    ]
+    scholarships = soup.find_all("div", class_="post")
+    valid_scholarships = []  # To store non-expired scholarships
 
-    print(f"Found {len(valid_scholarships)} active scholarships.")
+    for scholarship in scholarships:
+        expire_tag = scholarship.find('div', class_='form-group pull-right')
+        if expire_tag and 'Expired' in expire_tag.text:
+            continue  # Skip expired scholarships
+
+        h2_title = scholarship.find("h2", class_="post-title")
+        a_tag = h2_title.find('a').get('href')
+        scholarship_url = base_url + a_tag
+        valid_scholarships.append(scholarship_url)
+
+    # print(f"Found {len(valid_scholarships)} active scholarships.")
 
     # Visit each scholarship page
     for index, scholarship_url in enumerate(valid_scholarships):
-        print(f"Scraping {index + 1}/{len(valid_scholarships)}: {scholarship_url}")
+        # print(f"Scraping {index + 1}/{len(valid_scholarships)}: {scholarship_url}")
+        
+        # Open the scholarship details page
         driver.get(scholarship_url)
-        time.sleep(5)
+        time.sleep(3)  # Allow page to load
 
-        # Scrape details
+        # Scrape details (Example: Get scholarship title)
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        title = soup.find("h1", class_='clrwms fw4 font18').text.strip() if soup.find("h1") else "No Title Found"
-
-        details = soup.find_all('span', class_='text-line-value')
-        deadline = details[2].text.strip() if len(details) > 2 else "N/A"
-        provider = details[3].text.strip() if len(details) > 3 else "N/A"
-
+        title = soup.find("h1",class_='clrwms fw4 font18').text.strip() if soup.find("h1") else "No Title Found"
+        deadline=soup.find_all('span',class_='text-line-value')[2].text.strip()
+        provider=soup.find_all('span',class_='text-line-value')[3].text.strip()
         article=soup.find('article',class_='more-about-scholarship')
         description=article.find('p').text.strip()
+        add_scholarship_to_db(title, description, provider, deadline, scholarship_url)
 
-        # Save to Django model
-        Scholarship.objects.create(
-            title=title,
-            description=description,
-            location=provider,
-            due_date=deadline,
-            link=scholarship_url
-        )
-
+        # Go back to the main page
         driver.back()
-        time.sleep(3)
+        time.sleep(3)  # Allow time to return to the list page
 
     driver.quit()
-    
-    
-def scraper_masters(level,department,country):
+def scraper_masters(level, department, country):
     base_url = "https://www.mastersportal.com"
     search_url = f"{base_url}/search/scholarships/{level}/{country}/{department}"
-    driver=chrome_options_args()
+    driver = chrome_options_args()
     driver.get(search_url)
-
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".SearchResultItem")))
 
-    page_source = driver.page_source
-    soup = BeautifulSoup(page_source, 'html.parser')
-    page_heading = soup.find('span', class_="SearchSummaryDesktop").text
-    count = int(page_heading.split(" ")[0])
-    pages = math.ceil(count / 20)
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    scholarships = soup.find_all("li", class_="SearchResultItem")
     driver.quit()
 
-    for page_no in range(1, 2):  # Example: scraping first two pages
-        print(f"Scraping page {page_no}")
-        paginated_url = f"{search_url}?page={page_no}"
-
+    for scholarship in scholarships:
+        href = scholarship.find("a", class_="ScholarshipCard").get('href')
+        full_url = base_url + href
         driver = chrome_options_args()
-        driver.get(paginated_url)
+        driver.get(full_url)
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "ScholarshipName")))
 
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".SearchResultItem")))
+        scholarship_soup = BeautifulSoup(driver.page_source, 'html.parser')
+        title = scholarship_soup.find('h1', class_="ScholarshipName").get_text(strip=True)
+        university = scholarship_soup.find("a", class_="Name TextLink Connector js-organisation-info-link")
+        university_text = university.get_text(strip=True) if university else "No University Info"
+        location = scholarship_soup.find("span", class_="LocationItems")
+        location_text = location.get_text(strip=True) if location else "No Location Info"
+        articles = scholarship_soup.find_all("article", class_="ArticleContainer")
+        description_text = ' '.join(p.get_text(strip=True) for p in articles[1].find_all('p')) if len(articles) >= 2 else "No Description"
+        deadline = scholarship_soup.find_all("div", class_="Title")[3]
+        deadline_text = deadline.get_text(strip=True) if deadline else "No Deadline Info"
 
-        page_source = driver.page_source
-        soup = BeautifulSoup(page_source, 'html.parser')
-        scholarships = soup.find_all("li", class_="SearchResultItem")
-
-        for scholarship in scholarships:
-            href = scholarship.find("a", class_="ScholarshipCard").get('href')
-            full_url = base_url + href
-            driver = chrome_options_args()
-            driver.get(full_url)
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "ScholarshipName")))
-
-            scholarship_page_source = driver.page_source
-            scholarship_soup = BeautifulSoup(scholarship_page_source, 'html.parser')
-
-            try:
-                title = scholarship_soup.find('h1', class_="ScholarshipName").get_text(strip=True)
-                university = scholarship_soup.find("a", class_="Name TextLink Connector js-organisation-info-link")
-                university_text = university.get_text(strip=True) if university else "No University Info"
-
-                location = scholarship_soup.find("span", class_="LocationItems")
-                location_text = location.get_text(strip=True) if location else "No Location Info"
-
-                artcles = scholarship_soup.find_all("article", class_="ArticleContainer")
-                if len(artcles)>=2:
-                    description=artcles[1]
-                    p_tags = description.find_all('p')
-                    description_text = ' '.join(p.get_text(strip=True) for p in p_tags) if p_tags else "No Description"
-                
-
-                deadline = scholarship_soup.find_all("div", class_="Title")[3]
-                deadline_text = deadline.get_text(strip=True) if deadline else "No Deadline Info"
-
-                # Save the scholarship to the database
-                Scholarship.objects.create(
-                    title=title,
-                    description=description_text,
-                    location=f"{university_text} {location_text}",
-                    due_date=deadline_text,
-                    link=full_url
-                )
-                driver.quit()
-            except Exception as e:
-                print(f"Error scraping {full_url}: {e}")
-                continue
-
-            time.sleep(1)  # Short delay to avoid overwhelming the server
-
+        add_scholarship_to_db(title, description_text, f"{university_text} {location_text}", deadline_text, full_url)
         driver.quit()
+        time.sleep(1)
 
-            
+    driver.quit()
+       

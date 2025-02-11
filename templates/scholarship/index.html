@@ -134,7 +134,7 @@
             <div class="row justify-content-center ml-50">
     <div class="col-12">
         <!-- form -->
-        <form action="{% url 'wemake' %}" method="POST" class="search-box">
+        <form action="{% url 'scholarships_portal' %}" method="POST" class="search-box">
             {% csrf_token %}
             <!-- Inputs and Submit Button in a Single Row -->
             <div class="row align-items-center">
@@ -506,7 +506,8 @@
         </div>
       </div>
     </main>
-    {% endblock %} {% block footer %}
+    {% endblock %} 
+    {% block footer %}
     <footer>
       <!-- Footer Start-->
       <div class="footer-area footer-bg footer-padding">
