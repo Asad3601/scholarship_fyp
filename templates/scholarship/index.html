@@ -54,10 +54,13 @@
     <!-- Preloader Start -->
 
     {% block header %}
-    <header style="background-color:darkgray;">
+    <header style="background-color: darkgray">
       <!-- Header Start -->
       <div class="header-area header-transparrent">
-        <div class="headder-top header-sticky" style="background-color: darkgray;">
+        <div
+          class="headder-top header-sticky"
+          style="background-color: darkgray"
+        >
           <div class="container">
             <div class="row align-items-center">
               <div class="col-lg-3 col-md-2">
@@ -80,9 +83,7 @@
                       <ul id="navigation">
                         <li><a href="{% url '' %}">Home</a></li>
                         <li>
-                          <a href="{% url 'scholarships' %}"
-                            >Scholarships</a
-                          >
+                          <a href="{% url 'scholarships' %}">Scholarships</a>
                         </li>
                         <li><a href="{% url 'about' %}">About</a></li>
                         <li><a href="{% url 'contact' %}">Contact</a></li>
@@ -90,14 +91,16 @@
                     </nav>
                   </div>
                   <!-- Header-btn -->
-                  
+
                   <div class="header-btn d-none f-right d-lg-block">
                     {% if user_data %}
-                <a href="#" class="btn head-btn1" id="logout-btn">Logout</a>
-            {% else %}
-                <a href="{% url 'register' %}" class="btn head-btn1">Register</a>
-                <a href="{% url 'login' %}" class="btn head-btn2">Login</a>
-            {% endif %}
+                    <a href="#" class="btn head-btn1" id="logout-btn">Logout</a>
+                    {% else %}
+                    <a href="{% url 'register' %}" class="btn head-btn1"
+                      >Register</a
+                    >
+                    <a href="{% url 'login' %}" class="btn head-btn2">Login</a>
+                    {% endif %}
                   </div>
                 </div>
               </div>
@@ -126,80 +129,111 @@
               <div class="row">
                 <div class="col-xl-6 col-lg-9 col-md-10">
                   <div class="hero__caption" style="margin-top: 10px">
-                    <h1 style="font-size: 40px; margin-left: 70px; ;">Your Path to Education Starts Here</h1>
+                    <h1 style="font-size: 40px; margin-left: 70px">
+                      Your Path to Education Starts Here
+                    </h1>
                   </div>
                 </div>
               </div>
               <!-- Search Box -->
-            <div class="row justify-content-center ml-50">
-    <div class="col-12">
-        <!-- form -->
-        <form action="{% url 'scholarships_portal' %}" method="POST" class="search-box">
-            {% csrf_token %}
-            <!-- Inputs and Submit Button in a Single Row -->
-            <div class="row align-items-center">
-                <!-- Department Input -->
-                <div class="col-md-3">
-                    <div class="mb-3">
-                        <input
-                            type="text"
+              <div class="row justify-content-center ml-50">
+                <div class="col-12">
+                  <!-- form -->
+                  <form
+                    action="{% url 'filter' %}"
+                    method="POST"
+                    class="search-box"
+                  >
+                    {% csrf_token %}
+                    <!-- Inputs and Submit Button in a Single Row -->
+                    <div class="row align-items-center">
+                      <!-- Department (Field) Dropdown -->
+                      <div class="col-md-3">
+                        <div class="mb-3">
+                          <select
                             class="form-control"
                             name="department"
-                            placeholder="Department"
-                            required
                             style="height: 60px;"
-                        />
-                    </div>
-                </div>
+                          >
+                            <option value="">Select Field</option>
+                            <option value="Computer Science">
+                              Computer Science
+                            </option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Business">Business</option>
+                            <option value="Medicine">Medicine</option>
+                            <option value="Arts">Arts</option>
+                            <option value="Law">Law</option>
+                            <option value="Education">Education</option>
+                            <option value="Physics">Physics</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="Biology">Biology</option>
+                          </select>
+                        </div>
+                      </div>
 
-                <!-- Level Input -->
-                <div class="col-md-3">
-                    <div class="mb-3">
-                        <input
-                            type="text"
+                      <!-- Level Dropdown -->
+                      <div class="col-md-3">
+                        <div class="mb-3">
+                          <select
                             class="form-control"
                             name="level"
-                            placeholder="Level"
-                            required
-                            style="height: 60px;"
-                        />
-                    </div>
-                </div>
+                            style="height: 60px"
+                          >
+                            <option value="">Select Level</option>
+                            <option value="Bachelors">Bachelors</option>
+                            <option value="Masters">Masters</option>
+                            <option value="PhD">PhD</option>
+                            <option value="Diploma">Diploma</option>
+                          </select>
+                        </div>
+                      </div>
 
-                <!-- Country Input -->
-                <div class="col-md-3">
-                    <div class="mb-3">
-                        <input
-                            type="text"
+                      <!-- Country Dropdown -->
+                      <div class="col-md-3">
+                        <div class="mb-3">
+                          <select
                             class="form-control"
                             name="country"
-                            placeholder="Country"
-                            required
-                            style="height: 60px;"
-                        />
-                    </div>
-                </div>
+                            style="height: 60px"
+                          >
+                            <option value="">Select Country</option>
+                            <option value="United Kingdom">
+                              United Kingdom
+                            </option>
+                            <option value="China">China</option>
+                            <option value="Germany">Germany</option>
+                            <option value="France">France</option>
+                            <option value="Norway">Norway</option>
+                            <option value="Malaysia">Malaysia</option>
+                            <option value="USA">USA</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Australia">Australia</option>
+                            <option value="South Korea">South Korea</option>
+                            <option value="Japan">Japan</option>
+                            <option value="Singapore">Singapore</option>
+                            <option value="Brazil">Brazil</option>
+                            <option value="South Africa">South Africa</option>
+                          </select>
+                        </div>
+                      </div>
 
-                <!-- Submit Button -->
-                <div class="col-md-3">
-                    <div class="mb-3">
-                        <button
+                      <!-- Submit Button -->
+                      <div class="col-md-3">
+                        <div class="mb-3">
+                          <button
                             type="submit"
-                            class="btn btn-primary w-100"
-                            style="height: 60px;"
-                        >
+                            class="btn btn-primary"
+                            style="height: 60px"
+                          >
                             Find
-                        </button>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-
+                  </form>
                 </div>
-                
-            </div>
-        </form>
-    </div>
-</div>
-
-
+              </div>
             </div>
           </div>
         </div>
@@ -335,110 +369,37 @@
           </div>
           <div class="row justify-content-center">
             <div class="col-xl-10">
+              {% if scholarships %}
+
               <!-- single-job-content -->
-              <div class="single-job-items mb-30">
+              {% for scholarship in scholarships %}
+              <div class="single-job-items mb-10">
                 <div class="job-items">
-                  <div class="company-img">
-                    <a href="job_details.html"
-                      ><img
-                        src="{% static 'assets/img/icon/job-list1.png' %}"
-                        alt=""
-                    /></a>
-                  </div>
                   <div class="job-tittle">
-                    <a href="job_details.html"><h4>Digital Marketer</h4></a>
+                    <a
+                      href="{{scholarship.link}}"
+                      style="color: blue"
+                    >
+                      <h5>{{ scholarship.title }}</h5>
+                    </a>
                     <ul>
-                      <li>Creative Agency</li>
-                      <li>
-                        <i class="fas fa-map-marker-alt"></i>Athens, Greece
-                      </li>
-                      <li>$3500 - $4000</li>
+                      <i class="fas fa-map-marker-alt"></i>
+                      {{scholarship.location}}
+                      <li></li>
                     </ul>
                   </div>
                 </div>
                 <div class="items-link f-right">
                   <a href="job_details.html">Full Time</a>
-                  <span>7 hours ago</span>
+                  Due Date: <span>{{scholarship.due_date}}</span>
                 </div>
               </div>
-              <!-- single-job-content -->
-              <div class="single-job-items mb-30">
-                <div class="job-items">
-                  <div class="company-img">
-                    <a href="job_details.html"
-                      ><img
-                        src="{% static 'assets/img/icon/job-list2.png' %}"
-                        alt=""
-                    /></a>
-                  </div>
-                  <div class="job-tittle">
-                    <a href="job_details.html"><h4>Digital Marketer</h4></a>
-                    <ul>
-                      <li>Creative Agency</li>
-                      <li>
-                        <i class="fas fa-map-marker-alt"></i>Athens, Greece
-                      </li>
-                      <li>$3500 - $4000</li>
-                    </ul>
-                  </div>
-                </div>
-                <div class="items-link f-right">
-                  <a href="job_details.html">Full Time</a>
-                  <span>7 hours ago</span>
-                </div>
-              </div>
-              <!-- single-job-content -->
-              <div class="single-job-items mb-30">
-                <div class="job-items">
-                  <div class="company-img">
-                    <a href="job_details.html"
-                      ><img
-                        src="{% static 'assets/img/icon/job-list3.png' %}"
-                        alt=""
-                    /></a>
-                  </div>
-                  <div class="job-tittle">
-                    <a href="job_details.html"><h4>Digital Marketer</h4></a>
-                    <ul>
-                      <li>Creative Agency</li>
-                      <li>
-                        <i class="fas fa-map-marker-alt"></i>Athens, Greece
-                      </li>
-                      <li>$3500 - $4000</li>
-                    </ul>
-                  </div>
-                </div>
-                <div class="items-link f-right">
-                  <a href="job_details.html">Full Time</a>
-                  <span>7 hours ago</span>
-                </div>
-              </div>
-              <!-- single-job-content -->
-              <div class="single-job-items mb-30">
-                <div class="job-items">
-                  <div class="company-img">
-                    <a href="job_details.html"
-                      ><img
-                        src="{% static 'assets/img/icon/job-list4.png' %}"
-                        alt=""
-                    /></a>
-                  </div>
-                  <div class="job-tittle">
-                    <a href="job_details.html"><h4>Digital Marketer</h4></a>
-                    <ul>
-                      <li>Creative Agency</li>
-                      <li>
-                        <i class="fas fa-map-marker-alt"></i>Athens, Greece
-                      </li>
-                      <li>$3500 - $4000</li>
-                    </ul>
-                  </div>
-                </div>
-                <div class="items-link f-right">
-                  <a href="job_details.html">Full Time</a>
-                  <span>7 hours ago</span>
-                </div>
-              </div>
+              <hr />
+              {% endfor %} {% else %}
+              <h4 class="text-center">
+                No scholarships found or an error occurred.
+              </h4>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -506,8 +467,7 @@
         </div>
       </div>
     </main>
-    {% endblock %} 
-    {% block footer %}
+    {% endblock %} {% block footer %}
     <footer>
       <!-- Footer Start-->
       <div class="footer-area footer-bg footer-padding">
@@ -674,21 +634,21 @@
 
     {% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
-   <script>
-    const logoutBtn = document.getElementById('logout-btn'); // Get the logout button element
+    <script>
+      const logoutBtn = document.getElementById("logout-btn"); // Get the logout button element
 
-    if (logoutBtn) {
+      if (logoutBtn) {
         // Add a click event listener to the logout button
-        logoutBtn.addEventListener('click', function(event) {
-            event.preventDefault();
-            // Remove the jwt_token from the cookies
-            Cookies.remove('jwt_token',{path:"/"}); // Ensure the path matches the one used to set the cookie
+        logoutBtn.addEventListener("click", function (event) {
+          event.preventDefault();
+          // Remove the jwt_token from the cookies
+          Cookies.remove("jwt_token", { path: "/" }); // Ensure the path matches the one used to set the cookie
 
-            // Optionally, you can redirect the user to the login page or homepage after logout
-            window.location.href = "{% url '' %}";  // Adjust the URL as needed
+          // Optionally, you can redirect the user to the login page or homepage after logout
+          window.location.href = "{% url '' %}"; // Adjust the URL as needed
         });
-    }
-</script>
+      }
+    </script>
 
     <script src="{% static 'assets/js/vendor/modernizr-3.5.0.min.js' %}"></script>
     <!-- Jquery, Popper, Bootstrap -->

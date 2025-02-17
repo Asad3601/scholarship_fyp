@@ -17,14 +17,17 @@ Scholarships {% endblock %} {% block main %}
                 <div class="count-job mb-35 ml-10">
                   <span>
                     Total Scholarships:
-                    <strong id="total-job">{{ total_scholarship }}</strong></span
+                    <strong id="total-job"
+                      >{{ total_scholarship }}</strong
+                    ></span
                   >
 
                   {% if query %}
                   <span>
                     Query:
                     <strong
-                      >{{ query.level }} {{ query.department }} {{query.country}}
+                      >{{ query.level }} {{ query.department }}
+                      {{query.country}}
                     </strong></span
                   >
                   {% endif %}
@@ -49,27 +52,24 @@ Scholarships {% endblock %} {% block main %}
             <div class="row" id="scholarship-list">
               {% for scholarship in scholarships %}
               <div class="col-12 mb-30 single-scholarship">
-                <h4>{{ scholarship.title }}</h4>
+                <a
+                  href="/api/scholarship/{{ scholarship.title|urlencode }}/"
+                  style="color: blue"
+                >
+                  <h4>{{ scholarship.title }}</h4>
+                </a>
+
                 <!-- Scholarship Title -->
                 <p>
-                  <strong>Description:</strong> {{ scholarship.description }}
+                  <strong>Description:</strong>
+                  {{scholarship.description|truncatewords:12 }}
                 </p>
                 <!-- Description -->
                 <p><strong>Provider:</strong> {{ scholarship.location }}</p>
                 <!-- Location -->
 
                 <!-- Row for Deadline and View Details Link -->
-                <div class="d-flex justify-content-between align-items-center">
-                  <p><strong>Deadline:</strong> {{ scholarship.due_date }}</p>
-                  <!-- Deadline -->
-                  <a
-                    href="{{ scholarship.link }}"
-                    class="btn-link"
-                    target="_blank"
-                    >Detail</a
-                  >
-                  <!-- View Details Link -->
-                </div>
+
                 <hr
                   style="
                     margin-top: 20px;
@@ -155,139 +155,28 @@ Scholarships {% endblock %} {% block main %}
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
- document.addEventListener("DOMContentLoaded", function() {
-    var ajaxRequestSent = false; // Variable to track whether the AJAX request has been sent
-
-    // Function to make the AJAX requests in parallel
-    function makeRequests() {
-        console.log("Making AJAX requests...");
-        var platforms = [
-            { platform: "Master Portal", route: "{% url 'masters_portal' %}" },
-            { platform: "WeMake", route: "{% url 'wemake' %}" }
-        ];
-
-        var requests = platforms.map(function(platform) {
-            return scrap(platform.route, platform.platform);
-        });
-
-        Promise.all(requests).then(function() {
-            console.log("All requests completed.");
-        }).catch(function(error) {
-            console.error("An error occurred during the AJAX requests:", error);
-        });
-    }
-
-    // Call the function to make the request only if the request hasn't been sent already
-    var queryExists = '{{ query }}' !== ''; // Check if query is not empty
-    console.log("Query exists:", queryExists);
-
-    if (queryExists && !ajaxRequestSent) {
-        makeRequests();
-        ajaxRequestSent = true; // Set the flag to true to indicate that the request has been sent
-        console.log("AJAX request sent.");
-    } else {
-        console.log("AJAX request not sent. Either query doesn't exist or request was already sent.");
-    }
-});
-
-function scrap(route, platform) {
-    return new Promise(function(resolve, reject) {
-        $('body').addClass('ajax-request-in-progress');
-
-        // AJAX request for scraping other websites
-        $.ajax({
-            type: "POST",
-            url: route,
-            headers: { "X-CSRFToken": "{{ csrf_token }}" }, // Include CSRF token
-            data: { 'country': '{{ query.country }}', 'level': '{{query.level}}', 'department': '{{query.department}}' },
-            success: function(response) {
-                $('body').removeClass('ajax-request-in-progress');
-
-                // Remove any existing scholarships from the list
-                $('#scholarship-list').empty();
-
-                $.each(response.scholarships, function(index, scholarship) {
-                    var row = `
-                    <div class="col-12 mb-30 single-scholarship">
-                        <h4>${scholarship.title}</h4>
-                        <p><strong>Description:</strong> ${scholarship.description}</p>
-                        <p><strong>Provider:</strong> ${scholarship.location}</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <p><strong>Deadline:</strong> ${scholarship.due_date}</p>
-                            <a href="${scholarship.link}" class="btn-link" target="_blank">Detail</a>
-                        </div>
-                        <hr style="margin-top: 20px; border: none; border-top: 2px solid gray;" />
-                    </div>
-                    `;
-
-                    $('#scholarship-list').append(row);
-                });
-
-                // Update total scholarships count
-                $('#total-job').text(response.total_scholarship);
-
-                // Set total pages count
-                $('#total-pagination').text('Total Pages: ' + response.total_pages);
-
-                // Update pagination links
-                $('#pagination-links').empty();
-                $.each(response.limited_page_range, function(index, num) {
-                    var pageLink = `<li class="page-item ${num == response.current_page ? 'active' : ''}">
-                        <a class="page-link" href="?page=${num}" data-page="${num}">${num}</a>
-                    </li>`;
-                    $('#pagination-links').append(pageLink);
-                });
-
-                // Add Previous button if available
-                if (response.has_previous) {
-                    var previousPageLink = `<li class="page-item">
-                        <a class="page-link" href="?page=${parseInt(response.current_page) - 1}">Previous</a>
-                    </li>`;
-                    $('#pagination-links').prepend(previousPageLink);
-                }
-
-                // Add Next button if available
-                if (response.has_next) {
-                    var nextPageLink = `<li class="page-item">
-                        <a class="page-link" href="?page=${parseInt(response.current_page) + 1}">Next</a>
-                    </li>`;
-                    $('#pagination-links').append(nextPageLink);
-                }
-
-                alert('Data Scraped From ' + platform);
-                resolve();
-            },
-            error: function(xhr, status, error) {
-                console.error(xhr.responseText);
-                reject(error);
-            }
-        });
-    });
-}
-
-// Pagination Click Event Handler
-$(document).on("click", ".pagination a", function (e) {
+  // Pagination Click Event Handler
+  $(document).on("click", ".pagination a", function (e) {
     e.preventDefault(); // Prevent default link behavior
 
     var pageUrl = $(this).attr("href"); // Get the URL from the clicked pagination link
     loadScholarships(pageUrl); // Call the function to load scholarships for the clicked page
-});
+  });
 
-// Function to load scholarships dynamically
-function loadScholarships(url) {
+  // Function to load scholarships dynamically
+  function loadScholarships(url) {
     $.ajax({
-        url: url,
-        type: "GET",
-        success: function (data) {
-            $("#scholarship-listings-table").html(data.html); // Update the scholarship list with new data
-            window.history.pushState(null, null, url); // Update the browser URL
-        },
-        error: function (xhr, status, error) {
-            console.error(xhr.responseText);
-        }
+      url: url,
+      type: "GET",
+      success: function (data) {
+        $("#scholarship-listings-table").html(data.html); // Update the scholarship list with new data
+        window.history.pushState(null, null, url); // Update the browser URL
+      },
+      error: function (xhr, status, error) {
+        console.error(xhr.responseText);
+      },
     });
-}
-
+  }
 </script>
 
 {% endblock %}

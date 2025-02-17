@@ -1,0 +1,66 @@
+{% extends 'scholarship/index.html' %} {% load static %} {% block title %}
+Scholarship Detail {% endblock %} {% block main %}
+<main class="container py-5">
+  <!-- Job List Area Start -->
+  <div class="job-listing-area pt-80 pb-120">
+    <div class="row justify-content-center" id="scholarship-listings-table">
+      <!-- Right content -->
+      <div class="col-xl-9 col-lg-9 col-md-8">
+        <!-- Featured_job_start -->
+        <section class="featured-job-area">
+          <div class="text-center mb-5">
+            <h2>{{ scholarship.title }}</h2>
+            <p class="lead">{{ scholarship.provider }}</p>
+          </div>
+
+          <div class="container">
+            <!-- Scholarship Information Start -->
+            {% if scholarship %}
+            <div class="row">
+              <div class="col-lg-12">
+                <div class="scholarship-info p-4 rounded shadow-sm bg-light">
+                  <h6 class="text-primary">Description</h6>
+                  <p>{{ scholarship.description }}</p>
+
+                  <div class="row d-flex align-items-center mt-4">
+                    <div class="col-6">
+                      <h6>
+                        <strong>Provider:</strong>
+                        <span class="text-muted"
+                          >{{ scholarship.location }}</span
+                        >
+                      </h6>
+                    </div>
+                    <div class="col-6 text-right">
+                      <h6>
+                        <strong>Deadline:</strong>
+                        <span class="text-danger"
+                          >{{ scholarship.due_date }}</span
+                        >
+                      </h6>
+                    </div>
+                  </div>
+
+                   <div class="row justify-content-center mt-4">
+              <div class="col-12 text-center">
+                <a href="{{ scholarship.link }}" class="btn btn-primary" target="_blank">View Details</a>
+              </div>
+            </div>
+                </div>
+              </div>
+            </div>
+            {% else %}
+            <h4 class="text-center text-danger">
+              No scholarship found or an error occurred.
+            </h4>
+            {% endif %}
+            <!-- Scholarship Information End -->
+          </div>
+        </section>
+        <!-- Featured_job_end -->
+      </div>
+    </div>
+  </div>
+  <!-- Job List Area End -->
+</main>
+{% endblock %}
