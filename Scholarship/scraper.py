@@ -12,6 +12,8 @@ from Scholarship.models import Scholarship
 
 
 
+
+
 def chrome_options_args():
     chrome_options = Options()
 
@@ -88,14 +90,16 @@ def chrome_options_args():
     # Disable software rasterizer (to reduce CPU usage)
     chrome_options.add_argument("--disable-software-rasterizer")
 
+    # Block ads by disabling features related to ads
+    chrome_options.add_argument("--disable-features=PreloadMediaEngagementData,AutoplayIgnoreWebAudio,MediaEngagementBypassAutoplayPolicies")
+    chrome_options.add_argument("--blink-settings=imagesEnabled=false")  # Optionally disable images to block image-based ads
+
     # Initialize the WebDriver with the configured options
     service = Service('chromedriver.exe')  # Update path to chromedriver if needed
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     return driver
-
-
-def add_scholarship_to_db(title, description, location, due_date, link,degrees):
+def add_scholarship_to_db(title, description, location, due_date, link,degrees="Masters,Bachelors,Phd"):
     """
     Check if the scholarship already exists in the database.
     If it does not exist, add it.
@@ -303,4 +307,72 @@ def scraper_masters():
         page=page+1
     driver.quit()
     
+def scholarship_ads():
+    url = "https://www.scholarshipsads.com/search/?nationality%5B%5D=279&page=1"
+    driver = chrome_options_args()
+    driver.get(url)
+
+
+    # Allow the page to load and interact with the advanced search button
+
+    wait = WebDriverWait(driver, 5)
+
+
+    wait.until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'title-heading')]")))
+    # Get the page source and parse it with BeautifulSoup
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    page_heading = soup.find('h1').text
+    count = int(page_heading.split(" ")[0])
+    pages = math.ceil(count / 15)
+    print(f"Total pages: {pages}")
+    # Find all scholarships entries
+
+
+    # Iterate over each scholarship and follow the link
+    page_no=1
+    while (page_no<=pages):
+        print("scraping on page ",page_no)
+        url=f'https://www.scholarshipsads.com/search/?nationality%5B%5D=279&page={page_no}'
+        driver.get(url)
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        scholarships = soup.find_all("div", class_="card-warp")
+        scholarship_urls = []
+        for scholarship in scholarships:
+            expire_tag = scholarship.find('div', class_='card-deal expired')
+            if not (expire_tag and expire_tag.text.strip() == 'Expired'):
+                title = scholarship.find('h3')
+                if title:
+                    href = title.find('a').get('href')  # Get the href of the link
+                    if href:
+                        scholarship_urls.append(href)
+        # Iterate over all scholarship URLs and extract details
+        for url in scholarship_urls:
+            driver.get(url)
+            wait.until(EC.presence_of_element_located((By.CLASS_NAME, "title-heading")))  # Wait for the scholarship title to load
+            
+            # Extract the scholarship details on this page
+            scholarship_page_soup = BeautifulSoup(driver.page_source, 'html.parser')
+            
+            # Example: Extracting scholarship title and description from the individual page
+            scholarship_title = scholarship_page_soup.find("div",class_="title-heading")
+            if scholarship_title:
+                title_text=scholarship_title.text.strip()
+            scholarship_detail=scholarship_page_soup.find("div",class_="card-info col-md-8 col-lg-8 col-xs-12")
+            ul=scholarship_detail.find('ul')
+            if ul:
+                school = ul.find_all('li')[1].text if len(ul.find_all('li')) > 1 else "School not found"
+                degrees = ul.find_all('li')[2].text if len(ul.find_all('li')) > 2 else "School not found"
+                country = ul.find_all('li')[5].text if len(ul.find_all('li')) > 5 else "Country not found"
+                due_date = ul.find_all('li')[6].text if len(ul.find_all('li')) > 6 else "Due date not found"
+                provider = f"{school} {country}"
+                # print(f"Degrees: {degrees}")
+            item = scholarship_page_soup.find_all("div", class_="scholarship-item")[0]  # Adjust selector as needed
+            description=item.find_all('p')[1].text if len(item.find_all('p')) > 1 else "Description not exist"
+            add_scholarship_to_db(title_text,description,provider,due_date,url,degrees)
+            
+            # Sleep to avoid making requests too quickly
+            time.sleep(2)
+        page_no+=1
+    # Close the WebDriver
+    driver.quit()
     

@@ -10,7 +10,8 @@ import threading
 from Scholarship.models import Scholarship
 import random
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .scraper import scraper_masters,wemake
+from .scraper import scraper_masters,wemake,scholarship_ads
+from concurrent.futures import ThreadPoolExecutor
 from django.db.models import Q
     # url = "https://www.scholarshipsads.com" 200
     # url = "https://www.scholarshipsads.com/search/?nationality%5B%5D=279&country%5B%5D=&degree%5B%5D=&subject%5B%5D=&funding%5B%5D=" 200
@@ -97,51 +98,9 @@ def scholarships_data(request):
         'limited_page_range': limited_page_range,
     }
 
-    if level and department and country:
-        query_params = {
-            'level': level,
-            'department': department,
-            'country': country,
-        }
-        # query_string = '&'.join(f"{key}={value}" for key, value in query_params.items() if value)
-        context['query'] = query_params  # Add query string to context
-
-    # Check if the request is AJAX
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        html = render_to_string('scholarship/scholarship_list.html', context)
-        return JsonResponse({'html': html})
-
     return render(request, 'scholarship/scholarships.html', context)
 
-def scholarships_ads(request):
-    print("response",request.POST.get('country'))
-    country=request.POST.get('country')
-    return JsonResponse({'status': 'success', 'country': country})
-#     # try:
-#         # url = "https://www.scholarshipsads.com/search/?nationality%5B%5D=&country%5B%5D=135&degree%5B%5D=441&subject%5B%5D=&funding%5B%5D="
-#         # response = requests.get(url)
-        
-        
-#         # if response.status_code == 200:
-#         #     # Parse the HTML content using BeautifulSoup
-#         #     soup = BeautifulSoup(response.text, 'html.parser')
-#         #     scholarships = soup.find_all("div", class_="scholarship-card")
-            
-#         #     # Extract scholarship titles and other data
-#         #     scholarships_Data = []
-#         #     for scholarship in scholarships:
-#         #         title_tag = scholarship.find("a", class_="no-hover")
-#         #         if title_tag:  # Ensure the tag exists to avoid AttributeError
-#         #             scholarships_Data.append(title_tag.text.strip())
-            
-#         #     # Return the extracted data as JSON
-#         #     return JsonResponse({'status': 'success', 'scholarships': scholarships_Data,"length":len(scholarships_Data)}, status=200)
-#         # else:
-#         #     # Handle non-200 status codes
-#         #     return JsonResponse({'status': 'error', 'message': f"Failed to fetch data. HTTP Status: {response.status_code}"}, status=response.status_code)
-#     # except requests.RequestException as e:
-#     #     # Handle connection errors or other exceptions
-#     #     return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
 
 
 
@@ -277,11 +236,19 @@ def scholarships_filter(request):
 
 
 
+
+
+
 def run_scrapper():
     try:
-        print("Running scrapers...")
-        wemake()
-        scraper_masters()
+        print("Running scrapers in parallel...")
+
+        # Run scrapers concurrently
+        with ThreadPoolExecutor() as executor:
+            executor.submit(wemake)
+            executor.submit(scraper_masters)
+            executor.submit(scholarship_ads)
+
         print("Scraping completed.")
     except Exception as e:
         print(f"Error in run_scrapper: {e}")
@@ -291,12 +258,12 @@ def start_scheduler():
         schedule.run_pending()
         time.sleep(1)
 
-# Schedule the scraper every 2 minutes
-schedule.every(1).days.do(run_scrapper)
-# schedule.every(7).days.do(run_scrapper)
+# Schedule the scraper every 1 day
+schedule.every(5).minutes.do(run_scrapper)
 
 # Run scheduler in a separate thread
 scheduler_thread = threading.Thread(target=start_scheduler, daemon=True)
 scheduler_thread.start()
 
 print("Scheduler started...")
+
