@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect
 from django.template.loader import render_to_string
-from django.http import JsonResponse
+from django.http import JsonResponse,request
 from django.urls import reverse
 import requests,schedule,time
 
@@ -121,113 +121,116 @@ def get_scholarship_by_title(request, title):
     return render(request, 'scholarship/scholarship_detail.html', {'error': 'No title provided'})
 
 
-def scholarships_filter(request):
-    # Get filter values from POST data
-    level = request.POST.get('level', '').strip()
-    department = request.POST.get('department', '').replace('-', ' ').strip()
-    country = request.POST.get('country', '').replace('-', ' ').strip()
+def scholarships_get(request):
+    print("Request method:", request.method)
+    if request.method =='POST':
+        print("request is comming...")
+        # Get filter values from POST data
+        level = request.POST.get('level', '').strip()
+        department = request.POST.get('department', '').replace('-', ' ').strip()
+        country = request.POST.get('country', '').replace('-', ' ').strip()
 
-    print(f"Level: {level}, Department: {department}, Country: {country}")
+        print(f"Level: {level}, Department: {department}, Country: {country}")
 
-    # Start with the base queryset
-    scholarships_queryset = Scholarship.objects.all()
-    print(f"Initial scholarship count: {len(scholarships_queryset)}")
+        # Start with the base queryset
+        scholarships_queryset = Scholarship.objects.all()
+        print(f"Initial scholarship count: {len(scholarships_queryset)}")
 
-    # Apply filters based on the provided criteria
-    if department and level and country:
-        # If all three filters are provided, apply only one based on priority
-        scholarships_queryset = scholarships_queryset.filter(
-            Q(title__icontains=department) |
-            Q(description__icontains=department) |
-            Q(location__icontains=department)
-        )
-    elif department and level:
-        # If department and level are provided, apply both filters
-        scholarships_queryset = scholarships_queryset.filter(
-            Q(title__icontains=department) |
-            Q(description__icontains=department) |
-            Q(location__icontains=department)
-        ).filter(
-            degrees__icontains=level
-        )
-    elif department and country:
-        # If department and country are provided, apply both filters
-        scholarships_queryset = scholarships_queryset.filter(
-            Q(title__icontains=department) |
-            Q(description__icontains=department) |
-            Q(location__icontains=department)
-        ).filter(
-            location__icontains=country
-        )
-    elif level and country:
-        # If level and country are provided, apply both filters
-        scholarships_queryset = scholarships_queryset.filter(
-            degrees__icontains=level
-        ).filter(
-            location__icontains=country
-        )
-    elif department:
-        # If only department is provided, apply department filter
-        scholarships_queryset = scholarships_queryset.filter(
-            Q(title__icontains=department) |
-            Q(description__icontains=department) |
-            Q(location__icontains=department)
-        )
-    elif level:
-        # If only level is provided, apply level filter
-        scholarships_queryset = scholarships_queryset.filter(
-            degrees__icontains=level
-        )
-    elif country:
-        # If only country is provided, apply country filter
-        scholarships_queryset = scholarships_queryset.filter(
-            location__icontains=country
-        )
+        # Apply filters based on the provided criteria
+        if department and level and country:
+            # If all three filters are provided, apply only one based on priority
+            scholarships_queryset = scholarships_queryset.filter(
+                Q(title__icontains=department) |
+                Q(description__icontains=department) |
+                Q(location__icontains=department)
+            )
+        elif department and level:
+            # If department and level are provided, apply both filters
+            scholarships_queryset = scholarships_queryset.filter(
+                Q(title__icontains=department) |
+                Q(description__icontains=department) |
+                Q(location__icontains=department)
+            ).filter(
+                degrees__icontains=level
+            )
+        elif department and country:
+            # If department and country are provided, apply both filters
+            scholarships_queryset = scholarships_queryset.filter(
+                Q(title__icontains=department) |
+                Q(description__icontains=department) |
+                Q(location__icontains=department)
+            ).filter(
+                location__icontains=country
+            )
+        elif level and country:
+            # If level and country are provided, apply both filters
+            scholarships_queryset = scholarships_queryset.filter(
+                degrees__icontains=level
+            ).filter(
+                location__icontains=country
+            )
+        elif department:
+            # If only department is provided, apply department filter
+            scholarships_queryset = scholarships_queryset.filter(
+                Q(title__icontains=department) |
+                Q(description__icontains=department) |
+                Q(location__icontains=department)
+            )
+        elif level:
+            # If only level is provided, apply level filter
+            scholarships_queryset = scholarships_queryset.filter(
+                degrees__icontains=level
+            )
+        elif country:
+            # If only country is provided, apply country filter
+            scholarships_queryset = scholarships_queryset.filter(
+                location__icontains=country
+            )
 
-    print(f"Filtered scholarship count: {len(scholarships_queryset)}")
+        print(f"Filtered scholarship count: {len(scholarships_queryset)}")
 
-    # Convert to list for shuffling
-    all_scholarship_listings = list(scholarships_queryset)
+        # Convert to list for shuffling
+        all_scholarship_listings = list(scholarships_queryset)
 
-    # Shuffle the filtered scholarships
-    random.shuffle(all_scholarship_listings)
+        # Shuffle the filtered scholarships
+        random.shuffle(all_scholarship_listings)
 
-    # Pagination logic (unchanged)
-    if len(all_scholarship_listings) > 0:
-        paginator = Paginator(all_scholarship_listings, 10)
-        page = request.GET.get('page', 1)
-        try:
-            page = int(page)
-        except ValueError:
-            page = 1
+        # Pagination logic (unchanged)
+        if len(all_scholarship_listings) > 0:
+            paginator = Paginator(all_scholarship_listings, 10)
+            page = request.GET.get('page', 1)
+            try:
+                page = int(page)
+            except ValueError:
+                page = 1
 
-        try:
-            scholarship_listings = paginator.page(page)
-        except PageNotAnInteger:
-            scholarship_listings = paginator.page(1)
-        except EmptyPage:
-            scholarship_listings = paginator.page(paginator.num_pages)
+            try:
+                scholarship_listings = paginator.page(page)
+            except PageNotAnInteger:
+                scholarship_listings = paginator.page(1)
+            except EmptyPage:
+                scholarship_listings = paginator.page(paginator.num_pages)
 
-        total_scholarship = len(all_scholarship_listings)  # Total count of filtered scholarships
+            total_scholarship = len(all_scholarship_listings)  # Total count of filtered scholarships
 
-        # Adjust the pagination range
-        current_page = scholarship_listings.number
-        if current_page <= 3:
-            limited_page_range = range(1, min(paginator.num_pages, 5) + 1)
+            # Adjust the pagination range
+            current_page = scholarship_listings.number
+            if current_page <= 3:
+                limited_page_range = range(1, min(paginator.num_pages, 5) + 1)
+            else:
+                limited_page_range = range(current_page - 2, min(paginator.num_pages, current_page + 2) + 1)
+
+            # Prepare context for rendering
+            context = {
+                'scholarships': scholarship_listings,
+                'total_scholarship': total_scholarship,
+                'limited_page_range': limited_page_range,
+            }
         else:
-            limited_page_range = range(current_page - 2, min(paginator.num_pages, current_page + 2) + 1)
+            # If no scholarships were found
+            context = {'scholarships': [], 'total_scholarship': 0}
 
-        # Prepare context for rendering
-        context = {
-            'scholarships': scholarship_listings,
-            'total_scholarship': total_scholarship,
-            'limited_page_range': limited_page_range,
-        }
-    else:
-        # If no scholarships were found
-        context = {'scholarships': [], 'total_scholarship': 0}
-
-    return render(request, 'scholarship/scholarships.html', context)
+        return render(request, 'scholarship/scholarships.html', context)
 
 
 
