@@ -2,7 +2,8 @@ from dotenv import load_dotenv
 load_dotenv()
 from django.shortcuts import render, redirect
 from django.http import JsonResponse,HttpResponse
-from .models import UserModel
+from .models import UserModel,SavedSchaolarship
+from Scholarship.models import Scholarship
 import bcrypt
 import os
 from User.validations import *
@@ -10,7 +11,8 @@ from django.views.decorators.csrf import csrf_exempt
 import jwt
 from datetime import datetime, timedelta
 from User.context_processors import jwt_user_data
-
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 def add_user(request):
     if request.method == 'POST':
@@ -107,5 +109,72 @@ def user_data(request):
    
     user_data = context.get('user_data', None)
     return JsonResponse({"user_data": user_data})
-    
-    
+@jwt_required
+def profile(request):
+    return render (request,'user/profile.html') 
+
+
+
+
+
+@jwt_required
+@csrf_exempt
+def save_scholarship(request):
+    context = jwt_user_data(request)
+    user_data = context.get('user_data', None)
+
+    if request.method == "POST":
+        title = request.POST.get("title")
+        degrees = request.POST.get("degrees")
+        description = request.POST.get("description")
+        location = request.POST.get("location")
+        due_date = request.POST.get("due_date")
+        link = request.POST.get("link")
+
+        # Check if scholarship is already saved by this user
+        existing_scholarship = SavedSchaolarship.objects.filter(
+            user_id=user_data["id"], title=title
+        ).exists()
+
+        if existing_scholarship:
+            return JsonResponse({"duplicate": True, "message": "Scholarship already saved!"})
+
+        # Save new scholarship
+        SavedSchaolarship.objects.create(
+            user_id=user_data["id"],
+            title=title,
+            degrees=degrees,
+            description=description,
+            location=location,
+            due_date=due_date,
+            link=link
+        )
+
+        return JsonResponse({"duplicate": False, "message": "Scholarship saved successfully!"})
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+
+@jwt_required
+def saved(request):
+    print("Save scholarships")
+    context = jwt_user_data(request)
+    user_data = context.get('user_data', None)
+    if user_data['id']:
+        user_id = user_data['id']
+        
+        # Query the SavedJob model to get saved jobs of the logged-in user
+        saved_schoalrships = SavedSchaolarship.objects.filter(user=user_id)
+
+        return render(request, 'user/saved_schoalrships.html', {'saved_schoalrships': saved_schoalrships})
+    else:
+        # Handle the case where the user is not authenticated
+        # You might want to redirect them to a login page or show a message
+        return redirect('login')
+
+@jwt_required
+def del_scholarship(request,id):
+    scholarship = SavedSchaolarship.objects.get(id=id)
+    scholarship.delete()
+    return redirect('saved')

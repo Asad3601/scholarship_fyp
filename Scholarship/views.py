@@ -10,7 +10,7 @@ import threading
 from Scholarship.models import Scholarship
 import random
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .scraper import scraper_masters,wemake,scholarship_ads
+from .scraper import scraper_masters,wemake,scholarship_ads,studyaboardpk
 from concurrent.futures import ThreadPoolExecutor
 from django.db.models import Q
     # url = "https://www.scholarshipsads.com" 200
@@ -237,20 +237,16 @@ def scholarships_get(request):
 
 
 
-
-
-
-
-
 def run_scrapper():
     try:
         print("Running scrapers in parallel...")
-
+        Scholarship.objects.all().delete()
         # Run scrapers concurrently
         with ThreadPoolExecutor() as executor:
             executor.submit(wemake)
             executor.submit(scraper_masters)
             executor.submit(scholarship_ads)
+            executor.submit(studyaboardpk)
 
         print("Scraping completed.")
     except Exception as e:
@@ -262,7 +258,7 @@ def start_scheduler():
         time.sleep(1)
 
 # Schedule the scraper every 1 day
-schedule.every(5).minutes.do(run_scrapper)
+schedule.every(1).hour.do(run_scrapper)
 
 # Run scheduler in a separate thread
 scheduler_thread = threading.Thread(target=start_scheduler, daemon=True)

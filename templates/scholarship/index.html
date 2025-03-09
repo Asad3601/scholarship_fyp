@@ -91,8 +91,32 @@
                     </nav>
                   </div>
                   <!-- Header-btn -->
-
-                  <div class="header-btn d-none f-right d-lg-block">
+                   <div class="header-btn d-none f-right d-lg-block">
+                                    {% if user_data %}
+                                        <li class="nav-item ">
+                                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
+                                               aria-haspopup="true" aria-expanded="false">
+                                                 {% if user_profile_picture %}
+                                                 <img src="{{user_profile_picture}}"  width="30" height="30"
+                                                     class="rounded-circle">  
+                                                     {% else %}
+                                                     <img src="{% static 'assets/img/person.jpg' %}"  width="30" height="30"
+                                                     class="rounded-circle">  
+                                                {% endif %}
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                                                <a class="dropdown-item" href="{% url 'profile' %}">Profile</a>
+                                                <a href="#" class="dropdown-item" id="logout-btn">Logout</a>
+                                            </div>
+                                          </li>
+                                    {% else %}
+                                        <a href="{% url 'register' %}" class="btn head-btn1"
+                      >Register</a
+                    >
+                    <a href="{% url 'login' %}" class="btn head-btn2">Login</a>
+                                    {% endif %}
+                                </div>
+                  {% comment %} <div class="header-btn d-none f-right d-lg-block">
                     {% if user_data %}
                     <a href="#" class="btn head-btn1" id="logout-btn">Logout</a>
                     {% else %}
@@ -101,7 +125,7 @@
                     >
                     <a href="{% url 'login' %}" class="btn head-btn2">Login</a>
                     {% endif %}
-                  </div>
+                  </div> {% endcomment %}
                 </div>
               </div>
               <!-- Mobile Menu -->

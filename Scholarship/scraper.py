@@ -18,7 +18,7 @@ def chrome_options_args():
     chrome_options = Options()
 
     # Disable headless mode (run in visible browser for human-like behavior)
-    # chrome_options.add_argument("--headless")  # Comment this out for visible browser
+    chrome_options.add_argument("--headless")  # Comment this out for visible browser
 
     # Disable GPU acceleration (useful for headless mode)
     chrome_options.add_argument("--disable-gpu")
@@ -374,5 +374,104 @@ def scholarship_ads():
             time.sleep(2)
         page_no+=1
     # Close the WebDriver
+    driver.quit()
+
+
+def studyaboardpk():
+    # Navigate to the website
+    base_url = "https://www.studyabroad.pk"
+    url = "https://www.studyabroad.pk/scholarships/"
+    driver=chrome_options_args()
+    driver.get(url)
+
+    wait = WebDriverWait(driver, 10)
+    time.sleep(5)  # Allow page to load
+
+    # Get list of scholarships
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    table = soup.find("table")
+
+    valid_scholarships = []  # Store non-expired scholarships
+
+    if table:
+        scholarships = table.find_all("tr")
+        print(f"Total scholarships found: {len(scholarships)}")
+
+        for scholarship in scholarships:
+            td = scholarship.find('td')
+            if td:
+                a_tag = td.find('a')
+                if a_tag and a_tag.get('href'):
+                    scholarship_url = base_url + a_tag.get('href')
+                    valid_scholarships.append(scholarship_url)
+
+    print(f"Found {len(valid_scholarships)} active scholarships.")
+
+    # Visit each scholarship page
+    for index, scholarship_url in enumerate(valid_scholarships):
+        print(f"Scraping {index + 1}/{len(valid_scholarships)}: {scholarship_url}")
+        
+        driver.get(scholarship_url)
+        time.sleep(5)  # Allow page to load
+
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        
+        # Check for the apply button
+        apply_button = soup.find('p', class_='linkp')
+        if not apply_button:
+            print("Skipping expired scholarship...")
+            continue  # Skip expired scholarships
+
+        # Extract title
+        title = soup.find("h1").text.strip() if soup.find("h1") else "No Title Found"
+
+        # Extract provider
+        provider = "Unknown Provider"
+        table = soup.find("table")
+        if table:
+            tr_list = table.find_all('tr')
+            if len(tr_list) > 0:
+                tr0 = tr_list[0]
+                country_td = tr0.find_all('td')
+                if len(country_td) > 1:
+                    country = country_td[1].text.strip()
+            if len(tr_list) > 1:
+                tr1 = tr_list[1]
+                provider_td = tr1.find_all('td')
+                if len(provider_td) > 1:
+                    univerity = provider_td[1].text.strip()
+            if len(tr_list) > 2:
+                tr1 = tr_list[2]
+                degree_td = tr1.find_all('td')
+                if len(degree_td) > 1:
+                    degrees = degree_td[1].text.strip()
+            if len(tr_list)>4:
+                tr1 = tr_list[4]
+                deadline_td = tr1.find_all('td')
+                if len(deadline_td) > 1:
+                    deadline = deadline_td[1].text.strip()
+            else:
+                tr1 = tr_list[3]
+                deadline_td = tr1.find_all('td')
+                if len(deadline_td) > 1:
+                    deadline = deadline_td[1].text.strip()
+                
+        provider=f"{univerity} {country}"
+        # Extract description
+        description = "No description found"
+        article = soup.find('div', class_='postText')
+        if article:
+            paragraphs = article.find_all('p')
+            if len(paragraphs) > 1:
+                description = paragraphs[1].text.strip()
+        add_scholarship_to_db(title,description,provider,deadline,url,degrees)
+        # print(f"Title: {title}")
+        # print(f"Provider: {provider}") 
+        # print(f"DueDate: {deadline}") 
+        # print(f"degrees: {degrees}") 
+        # print(f"Description: {description}")
+        # print("-" * 50)
+
+    # Close the browser
     driver.quit()
     

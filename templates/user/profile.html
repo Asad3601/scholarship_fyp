@@ -1,0 +1,89 @@
+{% extends 'scholarship/index.html' %}
+{% load static %}
+
+{% block title %}
+    User Profile
+{% endblock title %}
+
+
+
+<style>
+    .profile-container {
+        position: relative; /* Make the container relative to position the icon */
+        display: inline-block; /* Ensure the container takes only as much space as necessary */
+    }
+
+    .profile-pic {
+        border-radius: 50%; /* Makes the image circular */
+        
+        object-fit: cover; /* Ensures the image covers the entire container */
+    }
+   
+   
+        .nav-link {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+    
+        .nav-link:hover {
+            background-color: #30597a;
+        }
+    </style>
+    
+
+ 
+ {% block main %}
+     <div class="container" style=" margin: 0px;">
+        <div class="row">
+            <div class="col-md-3" style="background-color: cornflowerblue; ">
+                <div class="sidebar">
+                    <hr>
+                    <ul class="sidebar-nav" style="padding: 20px;">
+                        <li class="nav-item" >
+                           <h6><a class="nav-link" href="{% url 'saved' %}"> Saved Scholarships </a></h6> 
+                        </li>
+                       
+                        
+                        <hr>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-9" style="padding: 70px;">
+                <h1>User Profile</h1>
+                <div class="user-profile">
+                    <div class="profile-container">
+                        {% if user_profile_picture %}
+                        <img src="{{user_profile_picture}}" alt="User Profile Picture" class="profile-pic rounded-circle" width="150" height="150"><br><br>
+                        {% else %}
+                        <img src="{% static 'assets/img/person.jpg' %}" alt="User Profile Picture" class="profile-pic rounded-circle" width="150" height="150"><br><br>
+                        {% endif %}
+                        
+                        {% comment %} <form action="{% url 'profile_picture' %}" method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                        <label for="">Change Profile Picture: </label>
+                        <input type="file" name="picture" id=""> 
+                        <input type="submit" class="btn" value="Change">
+                    </form> {% endcomment %}
+                    </div>
+                    <br>
+                    <div class="user-details">
+                        <p><strong>Username:</strong> {{ user_data.first_name }} {{user_data.last_name}}</p>
+                        <p><strong>Email:</strong> {{ user_data.email }}</p>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+ {% endblock %}
+     
+
+
+
+{% block about %}
+    <!-- Add your about block content here -->
+{% endblock about %}

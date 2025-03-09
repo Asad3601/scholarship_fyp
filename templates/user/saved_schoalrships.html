@@ -1,0 +1,69 @@
+{% extends "user/profile.html" %}
+{% load static %}
+
+{% block title %}
+Saved Scholarships
+{% endblock %}
+
+<style>
+    /* Add custom styles here if needed */
+    .job-listing {
+        margin-bottom: 20px;
+    }
+
+    .message-container {
+        margin-top: 30px;
+    }
+</style>
+
+{% block main %}
+<div class="container" style="margin: 0px;">
+    <div class="row">
+        <div class="col-md-3" style="background-color: cornflowerblue;">
+            <div class="sidebar">
+                <hr>
+                <ul class="sidebar-nav" style="padding: 20px;">
+                    <li class="nav-item">
+                        <h6><a class="nav-link" href="{% url 'profile' %}"> Profile </a></h6>
+                    </li>
+                    <hr>
+                    
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-9" style="padding: 70px;">
+            <h1>Saved Scholarships</h1>
+            {% if saved_schoalrships %}
+            <span style="margin-left: 600px; margin-bottom: 20px;"><a 
+                {% comment %} href="" class="btn btn-danger"> Delete All</a></span> {% endcomment %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Degrees</th>
+                            <th>Provider</th>
+                            <th>Due Date</th>  
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for scholarship in saved_schoalrships %}
+                        <tr>
+                            <td><a href="{{ scholarship.link }}" style="color: blue;">{{ scholarship.title }}</a></td>
+                            <td>{{ scholarship.degrees }}</td>
+                            <td>{{ scholarship.location }}</td>
+                            <td>{{ scholarship.due_date }}</td>
+                            <td><a href="{% url 'del_scholarship' scholarship.id %}" class="btn btn-danger" target="_blank">Delete</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p>No scholarship listings available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
