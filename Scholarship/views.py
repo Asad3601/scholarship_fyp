@@ -240,7 +240,7 @@ def scholarships_get(request):
 def run_scrapper():
     try:
         print("Running scrapers in parallel...")
-        Scholarship.objects.all().delete()
+        # Scholarship.objects.all().delete()
         # Run scrapers concurrently
         with ThreadPoolExecutor() as executor:
             executor.submit(wemake)
@@ -258,7 +258,8 @@ def start_scheduler():
         time.sleep(1)
 
 # Schedule the scraper every 1 day
-schedule.every(1).hour.do(run_scrapper)
+schedule.every(20).minutes.do(run_scrapper)
+
 
 # Run scheduler in a separate thread
 scheduler_thread = threading.Thread(target=start_scheduler, daemon=True)
